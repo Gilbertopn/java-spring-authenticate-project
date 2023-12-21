@@ -1,6 +1,8 @@
 package com.gilberto.authenticate.service;
 
 import com.gilberto.authenticate.entity.Usuario;
+import com.gilberto.authenticate.exception.PasswordInvalidException;
+import com.gilberto.authenticate.exception.UsernameUniqueViolationException;
 import com.gilberto.authenticate.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,11 @@ public class UsuarioService {
 
     @Transactional
     public Usuario salvar(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+        try {
+            return usuarioRepository.save(usuario);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new UsernameUniqueViolationException(String.format("Username '%s' já cadastrado", usuario.getUsername()));
+        }
     }
 
     @Transactional(readOnly = true)
@@ -30,13 +36,13 @@ public class UsuarioService {
     public Usuario editarSenha(Long id, String senhaAtual, String novaSenha, String confirmarSenha){
 
         if(!novaSenha.equals(confirmarSenha)){
-            throw new  RuntimeException("As senhas devem ser iguais");
+            throw new PasswordInvalidException("As senhas devem ser iguais");
         }
 
         Usuario user = buscarPorId(id);
 
         if (!senhaAtual.equals(user.getPassword())){
-            throw new RuntimeException("Senha não confere");
+            throw new PasswordInvalidException("Senha não confere");
         }
 
         user.setPassword(novaSenha);
