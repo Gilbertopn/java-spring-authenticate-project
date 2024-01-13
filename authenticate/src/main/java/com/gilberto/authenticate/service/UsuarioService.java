@@ -1,6 +1,7 @@
 package com.gilberto.authenticate.service;
 
 import com.gilberto.authenticate.entity.Usuario;
+import com.gilberto.authenticate.exception.EntityNotFoundException;
 import com.gilberto.authenticate.exception.PasswordInvalidException;
 import com.gilberto.authenticate.exception.UsernameUniqueViolationException;
 import com.gilberto.authenticate.repository.UsuarioRepository;
@@ -51,5 +52,17 @@ public class UsuarioService {
 
     public List<Usuario> buscarTodos() {
         return usuarioRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Usuario buscarPorUsername(String username) {
+        return usuarioRepository.findByUsername(username).orElseThrow(
+                () -> new EntityNotFoundException(String.format("Usuario com '%s' não encontrado", username))
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Usuario.Role buscarRolePorUsername(String username) {
+        return usuarioRepository.findRoleByUsername(username);
     }
 }
